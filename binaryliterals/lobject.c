@@ -302,31 +302,47 @@ static const char *l_str2int (const char *s, lua_Integer *result) {
   int neg;
   while (lisspace(cast_uchar(*s))) s++;  /* skip initial spaces */
   neg = isneg(&s);
-  if (s[0] == '0') {
-    if (s[1] == 'x' || s[1] == 'X') {  /* hex? */
-      s += 2;  /* skip '0x' */
-      for (; lisxdigit(cast_uchar(*s)); s++) {
+  if (s[0] == '0' &&
+      (s[1] == 'x' || s[1] == 'X')) {  /* hex? */
+    s += 2;  /* skip '0x' */
+    for (; lisxdigit(cast_uchar(*s)); s++) {
+      if (*s == '_') {
+        if (!(lisxdigit(cast_uchar(s[-1])) && lisxdigit(cast_uchar(s[1]))))
+          return NULL;
+      }
+      else {
         a = a * 16 + luaO_hexavalue(*s);
         empty = 0;
       }
     }
-    else if (s[1] == 'b' || s[1] == 'B') {
-      if (neg) return NULL; /* binary numbers can't be negative '*/
-      s += 2; /* skip '0b' */
-      for (; *s == '0' || *s == '1'; s++) {
-        a = a * 2 + (int) (*s == '1');
-        empty = 0;
+  }
+  else if (s[0] == '0' &&
+      (s[1] == 'b' || s[1] == 'B')) { /* binary */
+    s += 2; /* skip '0b' */
+    for (; *s == '0' || *s == '1' || *s == '_'; s++) {
+      if (*s == '_') { /* allow underscores if preceded and followed by a binary digit or underscore */
+        if (!(isbindigit(cast_uchar(s[-1])) && isbindigit(cast_uchar(s[1]))))
+          return NULL;
+      }
+      else {
+          a = a * 2 + (int) (*s == '1');
+          empty = 0;
       }
     }
-    else return NULL;
   }
   else {  /* decimal */
-    for (; lisdigit(cast_uchar(*s)); s++) {
-      int d = *s - '0';
-      if (a >= MAXBY10 && (a > MAXBY10 || d > MAXLASTD + neg))  /* overflow? */
-        return NULL;  /* do not accept it (as integer) */
-      a = a * 10 + d;
-      empty = 0;
+    for (; isdecdigit(cast_uchar(*s)); s++) {
+      if (*s == '_') { /* allow underscores if preceded and followed by decimal digit or underscore */
+        if (!(isdecdigit(cast_uchar(s[-1])) && isdecdigit(cast_uchar(s[1]))))
+          return NULL;
+      }
+      else {
+        int d = *s - '0';
+        if (a >= MAXBY10 && (a > MAXBY10 || d > MAXLASTD + neg))  /* overflow? */
+          return NULL;  /* do not accept it (as integer) */
+        a = a * 10 + d;
+        empty = 0;
+      }
     }
   }
   while (lisspace(cast_uchar(*s))) s++;  /* skip trailing spaces */

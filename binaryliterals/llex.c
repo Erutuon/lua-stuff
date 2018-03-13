@@ -226,7 +226,7 @@ static int read_numeral (LexState *ls, SemInfo *seminfo) {
   for (;;) {
     if (expo != NULL && check_next2(ls, expo))  /* exponent part? */
       check_next2(ls, "-+");  /* optional exponent sign */
-    if (lisxdigit(ls->current))
+    if (islexdigit(ls->current))
       save_and_next(ls);
     else if (ls->current == '.')
       save_and_next(ls);
