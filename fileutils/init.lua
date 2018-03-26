@@ -9,8 +9,6 @@ end
 
 --[[
 	Process the contents of a file with a function.
-	(Should not be used on binary files; messes up images,
-	for instance.)
 ]]
 
 local sformat = string.format
