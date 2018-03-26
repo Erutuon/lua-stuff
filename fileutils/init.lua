@@ -40,30 +40,37 @@ local function modify (filepath, modify)
 	local file = assert(io.open(filepath, 'rb'),
 		sformat('Could not open file %s', filepath))
 	
-	local text = file:read('a')
+	local text = file:read 'a'
+	file:close()
+	
 	if not text then
 		printf('Could not read file %s', filepath)
 		return
 	end
-	if text == '' then return end
-	file:close()
+	if text == '' then return end -- Unlikely; if file is empty, read returns nil?
 	
 	text = modify(text)
 	
 	if type(text) ~= 'string' then
 		printf('Modify function returned %s rather than a string for %s; file not modified', type(text), filepath)
+		file:close()
 		return
 	end
 	
-	file = io.open(filepath, 'wb')
+	-- If 'rb' mode is used and the old file length is greater than the length
+	-- of the text being written, bytes from the old file will remain in the
+	-- new version.
+	file = assert(io.open(filepath, 'wb'),
+		sformat('Could not open file %s', filepath))
+	
 	if not file:write(text) then
 		printf('Could not write to file %s', filepath)
-	end
-	if not file:flush() then
+	elseif not file:flush() then
 		printf('Could not flush changes to file %s', filepath)
+	else
+		printf('Modified %s', filepath)
 	end
 	file:close()
-	printf('Modified %s', filepath)
 end
 
 m.modify = modify
@@ -108,12 +115,28 @@ end
 m.string_matching_funcs = concat({ 'find', 'match', 'gmatch', 'gsub', 'pgsub' }, ' ')
 
 local function get_length (path)
-	local file = assert(io.open(path, 'rb'))
+	local file = assert(io.open(filepath, 'rb'),
+		sformat('Could not open file %s', filepath))
 	local length = file:seek 'end'
 	file:close()
 	return length
 end
 
 m.get_length = get_length
+
+local function write (path, text)
+	local file = assert(io.open(filepath, 'wb'),
+		sformat('Could not open file %s', filepath))
+	
+	if not file:write(text) then
+		printf('Could not write to file %s', filepath)
+	elseif not file:flush() then
+		printf('Could not flush changes to file %s', filepath)
+	else
+		printf('Modified %s', filepath)
+	end
+	file:close()
+end
+m.write = write
 
 return m
