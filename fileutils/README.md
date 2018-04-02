@@ -2,8 +2,10 @@ This module simplifies getting and modifying the contents of files. Each functio
 
 ## Basic functions
 
-* `fileutils.get_content(filepath)`
+* `fileutils.readall(filepath)`
 Returns the contents of a file.
+* `fileutils.write(filepath, content)`
+Writes `content` to file.
 * `fileutils.modify(filepath, modify_func)`
 Modifies a file. `modify_func` receives the text of the file; it must return a string, or else the file will not be modified.
 * `length(filepath)`
