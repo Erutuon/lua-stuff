@@ -73,15 +73,15 @@ end
 
 m.modify = modify
 
-local function get_content (path)
-	typeassert(type(path), 'string', 'get_content', 1)
+local function readall (path)
+	typeassert(type(path), 'string', 'readall', 1)
 	local file = assert(io.open(path, 'rb')) -- Avoid weird modifications done in Windows text mode.
-	text = assert(file:read 'a', sformat('The file %s is empty.', path))
+	local text = assert(file:read 'a', sformat('The file %s is empty.', path))
 	file:close()
 	return text
 end
 
-m.get_content = get_content
+m.readall = readall
 
 local mt = {}
 setmetatable(m, mt)
@@ -92,7 +92,7 @@ function mt.__index (self, key)
 	if key == 'find' or key == 'match' or key == 'gmatch' then
 		out = function (path, ...)
 			typeassert(type(path), 'string', key, 1)
-			text = get_content(path)
+			local text = readall(path)
 			return string[key](text, ...)
 		end
 	elseif key == 'gsub' or key == 'pgsub' then
@@ -112,17 +112,17 @@ end
 
 m.string_matching_funcs = concat({ 'find', 'match', 'gmatch', 'gsub', 'pgsub' }, ' ')
 
-local function get_length (path)
+local function length (filepath)
 	local file = assert(io.open(filepath, 'rb'),
 		sformat('Could not open file %s', filepath))
-	local length = file:seek 'end'
+	local len = file:seek 'end'
 	file:close()
-	return length
+	return len
 end
 
-m.get_length = get_length
+m.length = length
 
-local function write (path, text)
+local function write (filepath, text)
 	local file = assert(io.open(filepath, 'wb'),
 		sformat('Could not open file %s', filepath))
 	
