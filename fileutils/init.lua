@@ -28,6 +28,29 @@ local function typeassert(actualtype, expectedtype, funcname, i)
 	end
 end
 
+local function write (filepath, text, checked)
+	if not checked then
+		typeassert(type(filepath), 'string', 'write', 1)
+		typeassert(type(text), 'string', 'write', 2)
+	end
+	
+	-- If 'rb' mode is used and the old file length is greater than the length
+	-- of the text being written, bytes from the old file will remain in the
+	-- new version.
+	local file = assert(io.open(filepath, 'wb'),
+		sformat('Could not open file %s', filepath))
+	
+	if not file:write(text) then
+		printf('Could not write to file %s', filepath)
+	elseif not file:flush() then
+		printf('Could not flush changes to file %s', filepath)
+	else
+		printf('Modified %s', filepath)
+	end
+	
+	file:close()
+end
+m.write = write
 
 local function modify (filepath, modify)
 	if filepath:find([[%.%.?$]]) then return end
@@ -55,20 +78,7 @@ local function modify (filepath, modify)
 		return
 	end
 	
-	-- If 'rb' mode is used and the old file length is greater than the length
-	-- of the text being written, bytes from the old file will remain in the
-	-- new version.
-	file = assert(io.open(filepath, 'wb'),
-		sformat('Could not open file %s', filepath))
-	
-	if not file:write(text) then
-		printf('Could not write to file %s', filepath)
-	elseif not file:flush() then
-		printf('Could not flush changes to file %s', filepath)
-	else
-		printf('Modified %s', filepath)
-	end
-	file:close()
+	write(filepath, text)
 end
 
 m.modify = modify
@@ -121,20 +131,5 @@ local function length (filepath)
 end
 
 m.length = length
-
-local function write (filepath, text)
-	local file = assert(io.open(filepath, 'wb'),
-		sformat('Could not open file %s', filepath))
-	
-	if not file:write(text) then
-		printf('Could not write to file %s', filepath)
-	elseif not file:flush() then
-		printf('Could not flush changes to file %s', filepath)
-	else
-		printf('Modified %s', filepath)
-	end
-	file:close()
-end
-m.write = write
 
 return m
