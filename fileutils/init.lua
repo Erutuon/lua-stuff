@@ -78,15 +78,15 @@ local function modify (filepath, modify)
 		return
 	end
 	
-	write(filepath, text)
+	write(filepath, text, true)
 end
 
 m.modify = modify
 
-local function readall (path)
-	typeassert(type(path), 'string', 'readall', 1)
-	local file = assert(io.open(path, 'rb')) -- Avoid weird modifications done in Windows text mode.
-	local text = assert(file:read 'a', sformat('The file %s is empty.', path))
+local function readall (filepath)
+	typeassert(type(filepath), 'string', 'readall', 1)
+	local file = assert(io.open(filepath, 'rb')) -- Avoid weird modifications done in Windows text mode.
+	local text = assert(file:read 'a', sformat('The file %s is empty.', filepath))
 	file:close()
 	return text
 end
@@ -100,16 +100,16 @@ setmetatable(m, mt)
 function mt.__index (self, key)
 	local out
 	if key == 'find' or key == 'match' or key == 'gmatch' then
-		out = function (path, ...)
-			typeassert(type(path), 'string', key, 1)
-			local text = readall(path)
+		out = function (filepath, ...)
+			typeassert(type(filepath), 'string', key, 1)
+			local text = readall(filepath)
 			return string[key](text, ...)
 		end
 	elseif key == 'gsub' or key == 'pgsub' then
-		out = function (path, from, to, count)
-			typeassert(type(path), 'string', key, 1)
+		out = function (filepath, from, to, count)
+			typeassert(type(filepath), 'string', key, 1)
 			modify(
-				path,
+				filepath,
 				function (text)
 					return string[key](text, from, to, count)
 				end)
